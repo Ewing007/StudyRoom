@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: f6558d30-72ca-47a6-bee9-d00ab5618fad
+        username: nacos
+        password: nacos
+      username: nacos
+      password: nacos
+  application:
+    # 在 nacos 中注册的名字
+    name: StudyRoom-GateWay

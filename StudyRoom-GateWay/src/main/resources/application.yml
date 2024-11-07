@@ -1,0 +1,63 @@
+server:
+  port: 8888
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          # 启用服务发现
+          enabled: true
+          lower-case-service-id: true
+      # 网关路由
+      routes:
+#
+#        - id: 教师服务
+##          uri: http://localhost:8081
+#          uri: lb://StudyRoom-Teacher
+#          predicates:
+#            - Path=/StudyRoom-Teacher/**
+#          filters:
+#            - StripPrefix=1
+        - id: 用户服务
+#          uri: http://localhost:8082
+          uri: lb://StudyRoom-User
+          predicates:
+            - Path=/StudyRoom-User/**
+          filters:
+            - StripPrefix=1
+        - id: 自习室服务
+          #          uri: http://localhost:8080
+          uri: lb://StudyRoom-Room
+          predicates:
+            - Path=/StudyRoom-Room/**
+          filters:
+            - StripPrefix=1
+
+# knife4j 网关聚合
+#knife4j:
+#  gateway:
+#    # 第一个配置，开启gateway聚合组件
+#    enabled: true
+#    strategy: manual
+#    routes:
+#      - name: 学生服务
+#        service-name: student
+#        url: /student/v3/api-docs
+#      - name: 教师服务
+#        service-name: teacher
+#        url: /teacher/v3/api-docs
+#      - name: 管理员服务
+#        service-name: admin
+#        url: /admin/v3/api-docs
+knife4j:
+  gateway:
+    enabled: true
+    # 指定服务发现的模式聚合微服务文档，并且是默认 default 分组
+    strategy: discover
+    discover:
+      # OpenAPI 3.0 规范
+      version: openapi3
+      enabled: true
+
+
