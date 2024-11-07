@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.PermissionTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.PermissionTable">
+            <id property="permissionId" column="permission_id" jdbcType="VARCHAR"/>
+            <result property="permissionName" column="permission_name" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        permission_id,permission_name,description
+    </sql>
+
+
+    <!-- 定义 getPermissionNamesByIds -->
+    <select id="getPermissionNamesByIds" parameterType="java.util.List" resultType="java.lang.String">
+<!--        SELECT DISTINCT p.permission_name-->
+<!--        FROM permission_table p-->
+<!--        WHERE p.permission_id IN-->
+<!--        <foreach item="permissionId" collection="permissionIds" open="(" separator="," close=")">-->
+<!--            #{permissionId}-->
+<!--        </foreach>-->
+        SELECT DISTINCT p.permission_name
+        FROM permission_table p
+        WHERE p.permission_id IN
+        <foreach item='permissionId' collection='permissionIds' open='(' separator=',' close=')'>
+            #{permissionId}
+        </foreach>
+    </select>
+
+    <select id="getPermissionsByUserId" resultMap="BaseResultMap">
+        SELECT * FROM permission_table WHERE permission_id IN (
+            SELECT permission_id FROM role_permissions WHERE role_id IN (
+                SELECT role_id FROM user_roles WHERE user_id = #{userId}
+            )
+        )
+    </select>
+    <select id="selectPermissionsByRoleId" resultMap="BaseResultMap">
+        SELECT p.*
+        FROM permission_table p
+                 INNER JOIN role_permissions rp ON p.permission_id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+    </select>
+</mapper>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.MessageTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.MessageTable">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="replyToUserId" column="reply_to_user_id" jdbcType="VARCHAR"/>
+            <result property="replyToUserName" column="reply_to_user_name" jdbcType="VARCHAR"/>
+            <result property="userAvatar" column="user_avatar" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="replyTo" column="reply_to" jdbcType="BIGINT"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="CHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,content,
+        reply_to,status,create_time,
+        update_time
+    </sql>
+
+    <!-- 定义 resultMap 以确保字段正确映射 -->
+    <resultMap id="MessageDTOResultMap" type="com.ewing.domain.dto.MessageDto">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="roles" column="roles" typeHandler="com.ewing.handler.StringToListTypeHandler"/>
+        <result property="content" column="content"/>
+        <result property="replyTo" column="reply_to"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 获取某条留言的所有回复，并携带发布者的用户名和角色 -->
+<!--    <select id="getRepliesByMessageId" resultMap="MessageDTOResultMap">-->
+<!--        SELECT-->
+<!--            m.id,-->
+<!--            m.user_id,-->
+<!--            u.user_name,-->
+<!--            GROUP_CONCAT(r.role_name SEPARATOR ',') AS roles,-->
+<!--            m.content,-->
+<!--            m.reply_to,-->
+<!--            m.status,-->
+<!--            m.create_time,-->
+<!--            m.update_time-->
+<!--        FROM-->
+<!--            message_table m-->
+<!--                JOIN-->
+<!--            user_table u ON m.user_id = u.user_id-->
+<!--                LEFT JOIN-->
+<!--            user_roles ur ON u.user_id = ur.user_id-->
+<!--                LEFT JOIN-->
+<!--            role_table r ON ur.role_id = r.role_id-->
+<!--        WHERE-->
+<!--            m.reply_to = #{messageId}-->
+<!--          AND m.status = '1'-->
+<!--        GROUP BY-->
+<!--            m.id, m.user_id, u.user_name, m.content, m.reply_to, m.status, m.create_time, m.update_time-->
+<!--        ORDER BY-->
+<!--            m.create_time ASC-->
+<!--    </select>-->
+
+<!--    &lt;!&ndash; 获取所有根留言（非回复），并携带发布者的用户名和角色 &ndash;&gt;-->
+<!--    <select id="getRootMessages" resultMap="MessageDTOResultMap">-->
+<!--        SELECT-->
+<!--            m.id,-->
+<!--            m.user_id,-->
+<!--            u.user_name,-->
+<!--            GROUP_CONCAT(r.role_name SEPARATOR ',') AS roles,-->
+<!--            m.content,-->
+<!--            m.reply_to,-->
+<!--            m.status,-->
+<!--            m.create_time,-->
+<!--            m.update_time-->
+<!--        FROM-->
+<!--            message_table m-->
+<!--                JOIN-->
+<!--            user_table u ON m.user_id = u.user_id-->
+<!--                LEFT JOIN-->
+<!--            user_roles ur ON u.user_id = ur.user_id-->
+<!--                LEFT JOIN-->
+<!--            role_table r ON ur.role_id = r.role_id-->
+<!--        WHERE-->
+<!--            m.reply_to IS NULL-->
+<!--          AND m.status = '1'-->
+<!--        GROUP BY-->
+<!--            m.id, m.user_id, u.user_name, m.content, m.reply_to, m.status, m.create_time, m.update_time-->
+<!--        ORDER BY-->
+<!--            m.create_time DESC-->
+<!--    </select>-->
+</mapper>

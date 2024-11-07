@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.LostFoundTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.LostFoundTable">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="itemType" column="item_type" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="location" column="location" jdbcType="VARCHAR"/>
+            <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+            <result property="contactInfo" column="contact_info" jdbcType="VARCHAR"/>
+            <result property="illegal" column="illegal" jdbcType="CHAR"/>
+            <result property="delIllegal" column="del_illegal" jdbcType="CHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,item_type,
+        description,status,location,
+        image_url,contact_info,illegal,
+        del_illegal,create_time,update_time
+    </sql>
+
+    <!-- 查询所有的公告 -->
+    <select id="getAllLostFounds" resultMap="BaseResultMap">
+        SELECT
+            id,
+            user_id,
+            item_type,
+            description,
+            status,
+            location,
+            image_url,
+            contact_info,
+            illegal,
+            del_illegal,
+            create_time,
+            update_time
+        FROM
+            lost_found_table
+        WHERE
+            del_illegal = '0' AND illegal = '0'
+        ORDER BY
+            create_time DESC
+    </select>
+
+    <!-- 根据用户ID查询该用户发布的所有公告 -->
+    <select id="selectLostFoundByUserId" resultMap="BaseResultMap">
+        SELECT
+            id,
+            user_id,
+            item_type,
+            description,
+            status,
+            location,
+            image_url,
+            contact_info,
+            illegal,
+            del_illegal,
+            create_time,
+            update_time
+        FROM
+            lost_found_table AND del_illegal = '0' AND illegal = '0'
+        WHERE
+            user_id = #{userId}
+        ORDER BY
+            create_time DESC
+    </select>
+</mapper>
