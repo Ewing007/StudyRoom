@@ -1,0 +1,82 @@
+server:
+  port: 8082
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'user'
+      paths-to-match: '/**'
+      packages-to-scan:
+        # 配置接口文档扫描包路径，每个服务的路径不同，下面是系统服务(youlai-system)的包路径
+        - com.ewing.controller
+
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: false
+  setting:
+    language: zh_cn
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath:/mapper/*.xml
+  type-aliases-package: com.ewing.domain.entity, com.ewing.domain.dto
+  type-handlers-package: com.ewing.handler
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-value: '1'
+      logic-not-delete-value: '0'
+  plugins:
+    - interceptor: com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor
+      properties:
+        help-sharding-paging: false
+        reasonable: true
+        support-methods-arguments: true
+        params: null
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/studyroom?characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: studyroom
+    password: studyroom
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 200103
+  servlet:
+    multipart:
+      max-file-size: 5MB
+  web:
+    resources:
+      static-locations: classpath:/static/,file:${StudyRoom.file.upload.path}/
+xxl:
+  job:
+    admin:
+      address: http://localhost:9998/xxl-job-admin  # 确保使用 singular 'address'
+    executor:
+      appname: announcement-executor
+      address:                           # 可留空，XXL-JOB 会自动获取
+      ip: 127.0.0.1                      # 可留空，XXL-JOB 会自动获取
+      port: 9999                          # 可留空，XXL-JOB 会自动分配
+      logpath: /data/applogs/xxl-job/jobhandler
+      logretentiondays: 30
+      accessToken: default_token
+
+
+StudyRoom:
+  file:
+    upload:
+      path: D:/DataSource/StudyRoom/UploadFile
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.ewing.domain.entity
