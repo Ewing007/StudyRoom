@@ -1,0 +1,20 @@
+spring:
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      username: nacos
+      password: nacos
+      config:
+        username: nacos
+        password: nacos
+        namespace: f6558d30-72ca-47a6-bee9-d00ab5618fad
+        file-extension: properties
+      discovery:
+        username: nacos
+        password: nacos
+        server-addr: 127.0.0.1:8848
+        namespace: f6558d30-72ca-47a6-bee9-d00ab5618fad
+
+  application:
+    # 在 nacos 中注册的名字
+    name: StudyRoom-Teacher
