@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.ReservationTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.ReservationTable">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="reservationId" column="reservation_id" jdbcType="VARCHAR"/>
+            <result property="slotId" column="slot_id" jdbcType="VARCHAR"/>
+            <result property="roomId" column="room_id" jdbcType="VARCHAR"/>
+            <result property="seatId" column="seat_id" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="date" column="date" jdbcType="DATE"/>
+            <result property="startTime" column="start_time" jdbcType="TIMESTAMP"/>
+            <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
+            <result property="reservationTime" column="reservation_time" jdbcType="TIMESTAMP"/>
+            <result property="cancelTime" column="cancel_time" jdbcType="TIMESTAMP"/>
+            <result property="finishTime" column="finish_time" jdbcType="TIMESTAMP"/>
+            <result property="penaltyTime" column="penalty_time" jdbcType="TIMESTAMP"/>
+            <result property="payTime" column="pay_time" jdbcType="TIMESTAMP"/>
+            <result property="cancelPayTime" column="cancel_pay_time" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="delFlag" column="def_flag" jdbcType="CHAR"/>
+            <result property="checkInStatus" column="check_in_status" jdbcType="CHAR"/>
+            <result property="paymentStatus" column="payment_status" jdbcType="CHAR"/>
+            <result property="notes" column="notes" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,reservation_id,room_id,slot_id,seat_id,user_id,
+        start_time,date,end_time,reservation_time,cancel_time,finish_time,penalty_time,pay_time,cancel_pay_time,
+        status,def_flag,check_in_status,payment_status,notes
+    </sql>
+    <update id="updateReservationStatus"></update>
+    <select id="selectActiveReservations" resultType="com.ewing.domain.entity.ReservationTable"></select>
+</mapper>

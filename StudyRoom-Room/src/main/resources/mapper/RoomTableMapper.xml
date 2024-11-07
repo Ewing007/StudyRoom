@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.RoomTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.RoomTable">
+            <id property="roomId" column="room_id" jdbcType="VARCHAR"/>
+            <result property="id" column="id" jdbcType="BIGINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="location" column="location" jdbcType="VARCHAR"/>
+            <result property="capacity" column="capacity" jdbcType="INTEGER"/>
+            <result property="amenities" column="amenities" jdbcType="VARCHAR"/>
+            <result property="currentStatus" column="current_status" jdbcType="CHAR"/>
+            <result property="delFlag" column="def_flag" jdbcType="CHAR"/>
+<!--            <result property="openingHours" column="opening_hours" jdbcType="VARCHAR"/>-->
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="floor" column="floor" jdbcType="CHAR"/>
+            <result property="type" column="type" jdbcType="CHAR"/>
+            <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="RoomResultMap" type="com.ewing.domain.entity.RoomTable">
+            <id property="roomId" column="room_id" jdbcType="VARCHAR"/>
+            <result property="id" column="id" jdbcType="BIGINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="location" column="location" jdbcType="VARCHAR"/>
+            <result property="capacity" column="capacity" jdbcType="INTEGER"/>
+            <result property="amenities" column="amenities" jdbcType="VARCHAR"/>
+            <result property="currentStatus" column="current_status" jdbcType="CHAR"/>
+            <result property="delFlag" column="def_flag" jdbcType="CHAR"/>
+<!--            <result property="openingHours" column="opening_hours" jdbcType="VARCHAR"/>-->
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="floor" column="floor" jdbcType="CHAR"/>
+            <result property="type" column="type" jdbcType="CHAR"/>
+            <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        room_id,id,name,user_id,
+        location,capacity,amenities,
+        current_status,def_flag,description,
+        create_time,update_time,floor,
+        type,image_url
+    </sql>
+
+    <select id="selectAllActiveRooms" resultType="com.ewing.domain.entity.RoomTable">
+        SELECT * FROM room_table
+        WHERE del_flag = '0' LIMIT 6
+    </select>
+
+    <!-- 逻辑删除自习室以及关联的座位和预约 -->
+    <update id="deleteRoomAndRelatedRecords">
+        UPDATE room_table SET del_flag = '1' WHERE room_id = #{roomId};
+        UPDATE seat_table SET del_flag = '1' WHERE room_id = #{roomId};
+        UPDATE reservation_table SET del_flag = '1' WHERE seat_id IN (
+            SELECT seat_id FROM seat_table WHERE room_id = #{roomId}
+        );
+    </update>
+
+    <select id="queryByCondition" resultMap="RoomResultMap">
+        SELECT * FROM room_table
+        WHERE 1=1
+        <if test="params.capacity != null">
+            AND capacity >= #{params.capacity}
+        </if>
+        <if test="params.amenities != null and params.amenities != ''">
+            AND amenities LIKE CONCAT('%', #{params.amenities}, '%')
+        </if>
+<!--        <if test="params.openingHours != null and params.openingHours != ''">-->
+<!--            AND opening_hours LIKE CONCAT('%', #{params.openingHours}, '%')-->
+<!--        </if>-->
+        <if test="params.floor != null and params.floor != ''">
+            AND floor LIKE CONCAT('%', #{params.floor}, '%')
+        </if>
+        <if test="params.type != null and params.type != ''">
+            AND type = #{params.type}
+        </if>
+    </select>
+
+    <select id="queryByConditionPage" resultMap="RoomResultMap">
+        SELECT * FROM room_table
+        <where>
+            <if test="params.name != null and params.name != ''">
+                AND name LIKE CONCAT('%', #{params.name}, '%')
+            </if>
+            <if test="params.capacity != null">
+                AND capacity >= #{params.capacity}
+            </if>
+            <if test="params.amenities != null and params.amenities != ''">
+                AND amenities LIKE CONCAT('%', #{params.amenities}, '%')
+            </if>
+            <if test="params.floor != null and params.floor != ''">
+                AND floor LIKE CONCAT('%', #{params.floor}, '%')
+            </if>
+            <if test="params.type != null and params.type != ''">
+                AND type = #{params.type}
+            </if>
+            <if test="params.currentStatus != null and params.currentStatus != ''">
+                AND current_status = #{params.currentStatus}
+            </if>
+            <if test="params.location != null and params.location != ''">
+                AND location LIKE CONCAT('%', #{params.location}, '%')
+            </if>
+            <if test="params.description != null and params.description != ''">
+                AND description LIKE CONCAT('%', #{params.description}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getSlotIdsByRoomId" resultType="string">
+        SELECT
+            slot_id
+        FROM
+            room_time_slot_table
+        WHERE
+            room_id = #{roomId}
+    </select>
+
+    <select id="getDatesByRoomId" resultType="java.util.Date">
+        SELECT
+            date
+        FROM
+            seat_time_table
+        WHERE
+            room_id = #{roomId}
+          AND status != 3
+          AND date >= CURRENT_DATE
+        ORDER BY
+            date
+    </select>
+
+
+
+    <resultMap id="SeatDtoResultMap" type="com.ewing.domain.entity.SeatTimeTable">
+        <id property="id" column="id"/>
+        <result property="roomId" column="room_id"/>
+        <result property="seatId" column="seat_id"/>
+        <result property="seatNumber" column="seat_number"/>
+        <result property="slotId" column="slot_id"/>
+        <result property="status" column="status"/>
+        <result property="date" column="date"/>
+    </resultMap>
+
+    <select id="getSeatInfoByDateAndTime" resultMap="SeatDtoResultMap">
+        SELECT
+            stt.id,
+            stt.room_id,
+            stt.seat_id,
+            stt.seat_number,
+            stt.slot_id,
+            stt.status,
+            stt.date
+        FROM
+            seat_time_table stt
+        WHERE
+            stt.room_id = #{roomId}
+          AND stt.date = #{date}
+          AND stt.slot_id = #{slotId}
+    </select>
+</mapper>
