@@ -10,6 +10,7 @@ import com.ewing.domain.dto.SeatDto;
 import com.ewing.domain.dto.req.*;
 import com.ewing.service.RoomTableService;
 import constant.ApiRouterConstant;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -109,5 +110,12 @@ public class RoomController {
     @MyLog(title = "自习室模块", content = "获取自习室具体日期和时间段内的所有座位详情")
     public ResultPage<List<SeatDto>> getSeatInfoByDateAndTime(@RequestBody @Validated SeatViewReqDto seatViewReqDto) {
         return roomTableService.getSeatInfoByDateAndTime(seatViewReqDto);
+    }
+
+    @PostMapping("/seats")
+    @Operation(summary = "根据房间号日期和时间获取座位信息", description = "根据房间号日期和时间获取座位信息")
+    @MyLog(title = "自习室座位管理模块模块", content = "根据房间号日期和时间获取座位信息")
+    public ResultPage<List<SeatDto>> getSeatsByRoomId(@RequestBody @Validated SeatViewReqDto seatViewReqDto) {
+        return roomTableService.getSeatsByRoomIdAndTimeAndDate(seatViewReqDto);
     }
 }

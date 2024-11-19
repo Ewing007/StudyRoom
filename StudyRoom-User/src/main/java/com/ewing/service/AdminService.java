@@ -74,4 +74,6 @@ public interface AdminService extends IService<UserTable> {
     ResultPage<Object> someMethodToGetAllReservationsByAdmin(GetAllReservationByAdminReqDto getAllReservationByAdminReqDto);
 
     ResultPage<Void> someMethodToUpdateReservationByAdmin(ReservationUpdateByAdminReqDto reservationUpdateByAdminReqDto);
+
+    ResultPage<Void> someMethodToUpdateSeatByAdmin(UpdateSeatByAdminReqDto seatUpdateByAdminReqDto);
 }

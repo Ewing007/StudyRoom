@@ -43,4 +43,6 @@ public interface RoomTableService extends IService<RoomTable> {
 
 
     ResultPage<PageRespDto<RoomByAminDto>> getAllRoomsByAdmin(GetAllRoomByAdminReqDto getAllRoomByAdminReqDto);
+
+    ResultPage<List<SeatDto>> getSeatsByRoomIdAndTimeAndDate(SeatViewReqDto seatViewReqDto);
 }

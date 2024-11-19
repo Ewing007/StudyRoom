@@ -92,6 +92,17 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
 
 
         log.info("预约时间段：{}", timeSlots);
+
+        // 检查用户在同一时间段内是否有其他预约
+        List<ReservationTable> userConflictingReservations = reservationTableMapper.selectList(new QueryWrapper<ReservationTable>()
+                .eq("user_id", userId)
+                .eq("date", bookRoomReqDto.getDate())
+                .in("slot_id", timeSlots));
+
+        if (!userConflictingReservations.isEmpty()) {
+            return ResultPage.FAIL(ErrorEnum.USER_ALREADY_BOOKED);
+        }
+
         // 检查时间段是否与其他预约冲突
         List<ReservationTable> conflictingReservations = reservationTableMapper.selectList(new QueryWrapper<ReservationTable>()
                 .eq("room_id", bookRoomReqDto.getRoomId())

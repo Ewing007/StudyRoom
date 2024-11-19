@@ -47,4 +47,6 @@ public class SystemConfigConstant {
     public static final String ANNOUNCEMENT_STATUS_OVERDUE = "1";
 
     public static final String FILE_UPLOAD_DIRECTORY = "/images/";
+
+    public static final String DEFAULT_ROLE_ID = "STUDENT_ROLE_ID";
 }

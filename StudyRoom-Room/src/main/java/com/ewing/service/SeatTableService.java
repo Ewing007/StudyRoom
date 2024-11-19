@@ -2,6 +2,8 @@ package com.ewing.service;
 
 import Result.ResultPage;
 import com.ewing.domain.dto.SeatDto;
+import com.ewing.domain.dto.req.SeatViewReqDto;
+import com.ewing.domain.dto.req.UpdateSeatByAdminReqDto;
 import com.ewing.domain.entity.SeatTable;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -13,6 +15,9 @@ import java.util.List;
 * @createDate 2024-10-15 20:30:11
 */
 public interface SeatTableService extends IService<SeatTable> {
+    ResultPage<List<SeatDto>> getSeatsByRoomIdAndTimeAndDate(SeatViewReqDto seatViewReqDto);
+
+    ResultPage<Void> updateSeat(UpdateSeatByAdminReqDto updateSeatByAdminReqDto);
 
 //    ResultPage<List<SeatDto>> getSeatsByRoomId(String roomId);
 }

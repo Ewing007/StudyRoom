@@ -9,9 +9,7 @@ import cn.hutool.json.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ewing.domain.dto.req.*;
 import com.ewing.domain.dto.resp.UserUpdateRespDto;
-import com.ewing.domain.entity.PermissionTable;
-import com.ewing.domain.entity.RoleTable;
-import com.ewing.domain.entity.UserRoles;
+import com.ewing.domain.entity.*;
 import com.ewing.feign.RoomClient;
 import com.ewing.manager.RedisCache;
 import Utils.SnowUtils;
@@ -22,7 +20,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ewing.domain.dto.UserDto;
 import com.ewing.domain.dto.resp.UserRegisterRespDto;
 import com.ewing.domain.dto.resp.UserLoginRespDto;
-import com.ewing.domain.entity.UserTable;
 import com.ewing.manager.UserVerityCodeManager;
 import com.ewing.mapper.*;
 import com.ewing.service.UserTableService;
@@ -132,7 +129,8 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
 
         //注册用户信息
         UserTable user = new UserTable();
-        user.setUserId(SnowUtils.getSnowflakeNextIdStr());
+        String userId = SnowUtils.getSnowflakeNextIdStr();
+        user.setUserId(userId);
         user.setUserName(userRegisterReqDto.getUsername());
         user.setPhoneNumber(userRegisterReqDto.getPhone());
         user.setCreateTime(new DateTime());
@@ -143,6 +141,14 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
         //插入数据库
         userTableMapper.insert(user);
 
+        //分配默认角色为student
+        log.info("用户注册，默认分配角色为student");
+        log.info("userID:{}", userId);
+        UserRoles role = new UserRoles();
+        role.setUserId(userId);
+        role.setRoleId(SystemConfigConstant.DEFAULT_ROLE_ID);
+
+        userRolesMapper.insert(role);
         //返回部分用户信息
         UserDto userDto = BeanUtil.copyProperties(user, UserDto.class);
 
@@ -520,6 +526,7 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
             case "A4026" -> ResultPage.FAIL(ErrorEnum.TIME_SLOT_NOT_FOUND);
             case "A4027" -> ResultPage.FAIL(ErrorEnum.RESERVATION_TIME_CONFLICT);
             case "A4010" -> ResultPage.FAIL(ErrorEnum.USER_NOT_PERSSIONS);
+            case "A4053" -> ResultPage.FAIL(ErrorEnum.USER_ALREADY_BOOKED);
             default -> ResultPage.FAIL(ErrorEnum.UKNOWN_ERROR);
         };
     }

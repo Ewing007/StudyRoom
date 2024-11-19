@@ -46,13 +46,13 @@ public class LossFoundController {
         return lostFoundTableService.viewPersona(lostFoundByUserId);
     }
 
-//    @Operation(summary = "查看所有失物招领接口")
-//    @MyLog(title = "失物招领管模块", content = "用户所有发布失物招领")
-//    @GetMapping("/all")
-////    @RequiresPermission("USER_LOGGED_IN")
-//    public ResultPage<List<LostFoundDto>> all() {
-//        return lostFoundTableService.all();
-//    }
+    @Operation(summary = "查看所有失物招领接口")
+    @MyLog(title = "失物招领管模块", content = "用户所有发布失物招领")
+    @GetMapping("/all")
+//    @RequiresPermission("USER_LOGGED_IN")
+    public ResultPage<List<LostFoundDto>> all() {
+        return lostFoundTableService.all();
+    }
 
 //    @Operation(summary = "获取某条失物招领接口")
 //    @MyLog(title = "失物招领管模块", content = "获取某条失物招领接口")

@@ -22,6 +22,7 @@ public class RolePermissions implements Serializable {
     private Long id; // 自增主键
 
     private String roleId; // 角色ID
+
     private String permissionId; // 权限ID
 
     @TableField(exist = false)

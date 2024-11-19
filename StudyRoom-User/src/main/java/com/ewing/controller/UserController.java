@@ -34,12 +34,12 @@ public class UserController {
 
     private final UserTableService userTableService;
 
-    @Operation(summary = "接口测试")
-    @GetMapping("/test")
-    @MyLog(title = "用户模块", content = "测试用户模块")
-    public ResultPage<String> test() {
-        return ResultPage.SUCCESS("test admin");
-    }
+//    @Operation(summary = "接口测试")
+//    @GetMapping("/test")
+//    @MyLog(title = "用户模块", content = "测试用户模块")
+//    public ResultPage<String> test() {
+//        return ResultPage.SUCCESS("test admin");
+//    }
 
     @Operation(summary = "注册接口")
     @MyLog(title = "用户模块", content = "注册新用户")

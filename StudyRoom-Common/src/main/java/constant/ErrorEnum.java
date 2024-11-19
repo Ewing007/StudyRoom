@@ -80,6 +80,11 @@ public enum ErrorEnum {
 
     DELETE_MESSAGE_SUCCESS("A4051","删除留言成功"),
     DELETE_MESSAGE_FAILURE("A4052","删除留言失败"),
+
+    USER_ALREADY_BOOKED("A4053","已在该时间段内成功预约一个座位，不能重复预约"),
+
+    SEAT_STATUS_UPDATE_SUCCESS("A4054","座位状态更新成功"),
+    SEAT_STATUS_UPDATE_FAIL("A4055","座位状态更新失败"),
     USER_REQUEST_PARAM_ERROR("400", "用户参数请求错误"),
 
     USER_UNAUTHORIZED("401", "用户未认证"),

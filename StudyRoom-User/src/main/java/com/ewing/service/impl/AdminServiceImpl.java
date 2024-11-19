@@ -526,4 +526,25 @@ public class AdminServiceImpl extends ServiceImpl<UserTableMapper, UserTable> im
         };
     }
 
+    @Override
+    public ResultPage<Void> someMethodToUpdateSeatByAdmin(UpdateSeatByAdminReqDto seatUpdateByAdminReqDto) {
+        // 设置当前用户信息到 UserContextHolder（通常在过滤器中完成）
+        UserContext userContext = UserInfoContextHandler.getUserContext();
+        log.info("当前用户id：{}", userContext.getUserId());
+        log.info("当前用户角色：{}", userContext.getPermissions());
+        log.info("当前用户名：{}", userContext.getUserName());
+        if (ObjectUtil.isNull(userContext) || !userContext.getPermissions().contains("BOOK_STUDY_ROOM")) {
+            //无权限直接返回 USER_NOT_PERSSIONS
+            return ResultPage.FAIL(ErrorEnum.USER_NOT_PERSSIONS);
+        }
+        // 调用自习室管理微服务的获取所有预约信息接口
+        JSONObject jsonObject = JSONObject.parseObject(roomClient.updateSeat(seatUpdateByAdminReqDto));
+        Object code = jsonObject.get("code");
+        return switch (code.toString()) {
+            case "A4055" -> ResultPage.FAIL(ErrorEnum.SEAT_STATUS_UPDATE_SUCCESS);
+            case "A4054" -> ResultPage.SUCCESS(ErrorEnum.SEAT_STATUS_UPDATE_SUCCESS);
+            default -> ResultPage.ERROR();
+        };
+    }
+
 }

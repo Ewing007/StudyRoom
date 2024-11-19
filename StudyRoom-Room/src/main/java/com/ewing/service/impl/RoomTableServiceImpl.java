@@ -501,6 +501,19 @@ public ResultPage<PageRespDto<RoomDto>> queryByCondition(RoomQueryByConditionReq
         }
     }
 
+    @Override
+    public ResultPage<List<SeatDto>> getSeatsByRoomIdAndTimeAndDate(SeatViewReqDto seatViewReqDto) {
+        log.info("seatViewReqDto:{}", seatViewReqDto.toString());
+        String timeRange = seatViewReqDto.getSlotId();
+        LocalDate date = seatViewReqDto.getDate().toLocalDate();
+
+        String slotNameByTimeRange = TimeSlot.getSlotNameByTimeRange(timeRange);// 将时间范围字符串转换为 slot_id
+        log.info("slotId:{}", slotNameByTimeRange);
+        List<SeatTable> seatDtos = roomTableMapper.getSeatInfoByDateAndTime(seatViewReqDto.getRoomId(), date, slotNameByTimeRange);
+        List<SeatDto> seatDtoList = BeanUtil.copyToList(seatDtos, SeatDto.class);
+        return ResultPage.SUCCESS(seatDtoList);
+    }
+
 }
 
 

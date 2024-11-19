@@ -275,4 +275,11 @@ public class AdminController {
     public ResultPage<Void> someMethodToUpdateReservationByAdmin(@RequestBody ReservationUpdateByAdminReqDto reservationUpdateByAdminReqDto) {
         return adminService.someMethodToUpdateReservationByAdmin(reservationUpdateByAdminReqDto);
     }
+
+    @Operation(summary = "管理员更新座位信息")
+    @MyLog(title = "管理员模块", content = "管理员更新座位信息")
+    @PutMapping("/update_seat")
+    public ResultPage<Void> someMethodToUpdateSeatByAdmin(@RequestBody UpdateSeatByAdminReqDto seatUpdateByAdminReqDto) {
+        return adminService.someMethodToUpdateSeatByAdmin(seatUpdateByAdminReqDto);
+    }
 }

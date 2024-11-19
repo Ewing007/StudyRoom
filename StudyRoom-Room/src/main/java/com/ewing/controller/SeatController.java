@@ -3,16 +3,16 @@ package com.ewing.controller;
 import Result.ResultPage;
 import com.ewing.annotation.MyLog;
 import com.ewing.domain.dto.SeatDto;
+import com.ewing.domain.dto.req.SeatViewReqDto;
+import com.ewing.domain.dto.req.UpdateSeatByAdminReqDto;
 import com.ewing.domain.entity.SeatTable;
 import com.ewing.service.SeatTableService;
 import constant.ApiRouterConstant;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -34,4 +34,17 @@ public class SeatController {
 //    public ResultPage<List<SeatDto>> getSeatsByRoomId(@PathVariable String roomId) {
 //        return seatService.getSeatsByRoomId(roomId);
 //    }
+    @PostMapping("/seats")
+    @Operation(summary = "根据房间号日期和时间获取座位信息", description = "根据房间号日期和时间获取座位信息")
+    @MyLog(title = "自习室座位管理模块模块", content = "根据房间号日期和时间获取座位信息")
+    public ResultPage<List<SeatDto>> getSeatsByRoomId(@RequestBody SeatViewReqDto seatViewReqDto) {
+        return seatService.getSeatsByRoomIdAndTimeAndDate(seatViewReqDto);
+    }
+
+    @PutMapping("/update_seats")
+    @Operation(summary = "更新座位信息", description = "管理员更新座位信息")
+    @MyLog(title = "自习室座位管理模块模块", content = "管理员更新座位信息")
+    public ResultPage<Void> updateSeat(@RequestBody @Validated UpdateSeatByAdminReqDto updateSeatByAdminReqDto) {
+        return seatService.updateSeat(updateSeatByAdminReqDto);
+    }
 }

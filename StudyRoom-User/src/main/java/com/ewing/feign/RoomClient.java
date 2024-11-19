@@ -59,6 +59,7 @@ public interface RoomClient {
     @PutMapping(ApiRouterConstant.ROOM_RESERVATION_URL_PREFIX + "/update_reservation")
     String updateReservation(ReservationUpdateByAdminReqDto reservationUpdateByAdminReqDto);
 
-
+    @PutMapping(ApiRouterConstant.ROOM_SEAT_URL_PREFIX + "/update_seats")
+    String updateSeat(UpdateSeatByAdminReqDto seatUpdateByAdminReqDto);
 }
 
