@@ -33,7 +33,12 @@ spring:
             - Path=/StudyRoom-Room/**
           filters:
             - StripPrefix=1
-
+        - id: websocket-service
+          uri: lb:ws://StudyRoom-User
+          predicates:
+            - Path=/ws/**
+          filters:
+            - StripPrefix=1
 # knife4j 网关聚合
 #knife4j:
 #  gateway:

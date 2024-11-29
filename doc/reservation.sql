@@ -49,6 +49,8 @@ CREATE TABLE reservation_table (
                              INDEX idx_date (date) COMMENT '按日期查询',
                              INDEX idx_slot_id (slot_id) COMMENT '按时间槽查询'
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COMMENT='自习室座位预约表';
+ALTER TABLE reservation_table ADD INDEX idx_reservation_id (reservation_id);
+
 
 
 

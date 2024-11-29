@@ -21,8 +21,11 @@ import constant.SystemConfigConstant;
 import context.UserInfoContextHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import Exception.BusinessException;
+
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -37,6 +40,9 @@ public class LostFoundTableServiceImpl extends ServiceImpl<LostFoundTableMapper,
     implements LostFoundTableService {
 
     private final LostFoundTableMapper lostFoundTableMapper;
+
+    private final KafkaTemplate<String, HashMap<String, String>> kafkaTemplate;
+
     @Override
     public ResultPage<Void> post(LostFoundReqDto lostFoundReqDto) {
         LostFoundTable lostFoundTable = new LostFoundTable();
@@ -100,6 +106,15 @@ public class LostFoundTableServiceImpl extends ServiceImpl<LostFoundTableMapper,
         lostFoundTable.setIllegal(lostFoundAdminReqDto.getIllegal());
         lostFoundTable.setUpdateTime(new DateTime());
         lostFoundTableMapper.update(lostFoundTable, queryWrapper);
+        if(lostFoundTable.getDelIllegal().equals(SystemConfigConstant.LOSTFOUND_DELETE) ||
+                lostFoundTable.getIllegal().equals(SystemConfigConstant.LOSTFOUND_ILLEGAL)) {
+            LostFoundTable selectById = lostFoundTableMapper.selectById(lostFoundAdminReqDto.getId());
+            String userId = selectById.getUserId();
+            String content = selectById.getDescription();
+            HashMap<String, String> map = new HashMap<>();
+            map.put(userId, SystemConfigConstant.LOSTFOUND_ILLEGAL_NOTIFICATION + content);
+            kafkaTemplate.send(SystemConfigConstant.SYSTEM_MESSAGE_TOPIC, map);
+        }
         return ResultPage.SUCCESS();
     }
 

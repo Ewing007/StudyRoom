@@ -51,7 +51,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/front/user/rooms", //放行获取自习室信息
                         "/api/front/announcement/all", //放行获取公告信息
                         "/DataSource/StudyRoom/UploadFile/**",
-                        "/error"
+                        "/error",
+                        "/ws/**"
                 );
 
     }

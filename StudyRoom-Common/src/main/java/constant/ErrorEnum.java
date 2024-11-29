@@ -85,6 +85,14 @@ public enum ErrorEnum {
 
     SEAT_STATUS_UPDATE_SUCCESS("A4054","座位状态更新成功"),
     SEAT_STATUS_UPDATE_FAIL("A4055","座位状态更新失败"),
+
+    LOCK_ACQUIRE_FAILED("A4056","锁获取失败"),
+
+    CHECK_IN_EXPIRED("A4057","签到已过期"),
+
+    CHECK_IN_SUCCESS("A4057","签到成功"),
+
+    CHECK_IN_ALREADY_CHECKED("A4058","已签到，不能重复签到"),
     USER_REQUEST_PARAM_ERROR("400", "用户参数请求错误"),
 
     USER_UNAUTHORIZED("401", "用户未认证"),

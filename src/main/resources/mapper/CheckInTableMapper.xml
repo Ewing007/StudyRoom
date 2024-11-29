@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="generator.mapper.CheckInTableMapper">
+
+    <resultMap id="BaseResultMap" type="generator.domain.CheckInTable">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="qrCodeId" column="qr_code_id" jdbcType="VARCHAR"/>
+            <result property="reservationId" column="reservation_id" jdbcType="VARCHAR"/>
+            <result property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="checkInTime" column="check_in_time" jdbcType="TIMESTAMP"/>
+            <result property="checkInQrCode" column="check_in_qr_code" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="expireTime" column="expire_time" jdbcType="TIMESTAMP"/>
+            <result property="notes" column="notes" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,qr_code_id,reservation_id,
+        user_id,check_in_time,check_in_qr_code,
+        status,expire_time,notes
+    </sql>
+</mapper>

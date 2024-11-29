@@ -30,13 +30,11 @@ import context.UserInfoContextHandler;
 import lombok.RequiredArgsConstructor;
 import Exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.message.ReusableMessage;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
 * @author ewing
@@ -56,6 +54,9 @@ public class MessageTableServiceImpl extends ServiceImpl<MessageTableMapper, Mes
 
     private final RedisCache redisCache;
 
+    private final KafkaTemplate<String, MessageDto> kafkaTemplate;
+
+    private final KafkaTemplate<String, HashMap<String, String>> kafkaTemplateString;
     @Override
     public ResultPage<MessageDto> post(MessageReqDto messageReqDto) {
         String userId = UserInfoContextHandler.getUserContext().getUserId();
@@ -104,6 +105,7 @@ public class MessageTableServiceImpl extends ServiceImpl<MessageTableMapper, Mes
         messageTable.setUpdateTime(new DateTime());
         this.save(messageTable);
         MessageDto messageResp = BeanUtil.copyProperties(messageTable, MessageDto.class);
+        kafkaTemplate.send(SystemConfigConstant.REPLY_MESSAGE_TOPIC, messageResp);
         return ResultPage.SUCCESS(messageResp);
     }
 
@@ -246,7 +248,14 @@ public class MessageTableServiceImpl extends ServiceImpl<MessageTableMapper, Mes
         messageTable.setStatus(SystemConfigConstant.MESSAGE_STATUS_DELETED);
         messageTable.setDelFlag(SystemConfigConstant.MESSAGE_DELETED_FLAG);
 
+        log.info("删除留言:{}", messageId);
         this.update(messageTable, updateWrapper);
+        MessageTable selectById = messageMapper.selectById(messageId);
+        String content = selectById.getContent();
+        String userId = selectById.getUserId();
+        HashMap<String, String> map = new HashMap<>();
+        map.put(userId, SystemConfigConstant.SYSTEM_MESSAGE_TOPIC + content);
+        kafkaTemplateString.send(SystemConfigConstant.REPLY_MESSAGE_TOPIC, map);
         return ResultPage.SUCCESS(ErrorEnum.DELETE_MESSAGE_SUCCESS);
     }
 

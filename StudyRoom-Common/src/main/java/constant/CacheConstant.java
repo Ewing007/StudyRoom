@@ -23,6 +23,7 @@ public class CacheConstant {
      */
     public static final String TOKEN_VERITY_CACHE_KEY = REDIS_CACHE_PREFIX+ "token::";
 
+    public static final String ANNOUNCEMENT_CACHE_KEY = REDIS_CACHE_PREFIX+ "announcement::";
     /**
      * @description: users缓存前缀
      * @author ewing

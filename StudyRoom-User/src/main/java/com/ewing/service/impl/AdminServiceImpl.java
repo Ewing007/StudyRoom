@@ -27,12 +27,11 @@ import context.UserContext;
 import context.UserInfoContextHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +58,7 @@ public class AdminServiceImpl extends ServiceImpl<UserTableMapper, UserTable> im
     private final MessageTableService messageTableService;
     private final RolePermissionsMapper rolePermissionsMapper;
 
+    private final KafkaTemplate<String, Map<String, Object>> kafkaTemplate;
     @Override
     public ResultPage<Void> disable(UserDisableReqDto userDisableReqDto) {
 //        UserTable user = getById(userDisableReqDto.getUserId());
@@ -74,6 +74,10 @@ public class AdminServiceImpl extends ServiceImpl<UserTableMapper, UserTable> im
 
         //跟新缓存
         redisCache.setCacheObject(CacheConstant.USERS_CACHE_KEY + userDisableReqDto.getUserId(), BeanUtil.copyProperties(user, UserDto.class));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put(userDisableReqDto.getUserId(),SystemConfigConstant.DISABLE_USER_STATUS_NOTIFICATION);
+        kafkaTemplate.send(SystemConfigConstant.SYSTEM_MESSAGE_TOPIC, map);
         return ResultPage.SUCCESS(ErrorEnum.USER_ACCOUNT_BANNED);
     }
 
@@ -177,50 +181,6 @@ public class AdminServiceImpl extends ServiceImpl<UserTableMapper, UserTable> im
 
     }
 
-    @Override
-    public ResultPage<Void> someMethodToDeleteStudyRoom(String roomId) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<List<UserTable>> getAllUsers() {
-        return null;
-    }
-
-    @Override
-    public ResultPage<List<String>> getAllPermissions() {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Void> addPermission(String permission) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Void> deletePermission(String permission) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Void> assignPermission(UserTable userTable) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Object> someMethodToQueryStudyRoom(String roomId) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Object> someMethodToEditStudyRoom(String roomId, String seatId, String userId, Object object) {
-        return null;
-    }
-
-    @Override
-    public ResultPage<Object> someMethodToEditSeat(String roomId, String seatId, Object object) {
-        return null;
-    }
 
     @Override
     public ResultPage<PageRespDto<UserInfoByAdminDto>> managerAllUsers(UserInfoAllByAdminReqDto userInfoAllByAdminReqDto) {

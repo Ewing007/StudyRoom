@@ -23,6 +23,8 @@
         <fastjson.version>1.2.33</fastjson.version>
         <lionsoul.version>2.6.4</lionsoul.version>
         <xxl-job.version>2.4.1</xxl-job.version>
+        <redisson.version>3.17.6</redisson.version>
+        <google.zxing.version>3.4.1</google.zxing.version>
     </properties>
 
     <dependencies>
@@ -157,6 +159,12 @@
 <!--            <artifactId>redisson-spring-boot-starter</artifactId>-->
 <!--            <version>${redis.version}</version>-->
 <!--        </dependency>-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>${redisson.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -176,6 +184,26 @@
             <version>${xxl-job.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${google.zxing.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>${google.zxing.version}</version>
+        </dependency>
 
     </dependencies>
 

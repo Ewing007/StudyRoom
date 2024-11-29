@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ewing.mapper.NotificationsTableMapper">
+
+    <resultMap id="BaseResultMap" type="com.ewing.domain.entity.NotificationsTable">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="notificationId" column="notification_id" jdbcType="VARCHAR"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="recipientId" column="recipient_id" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="CHAR"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+            <result property="type" column="type" jdbcType="OTHER"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="CHAR"/>
+            <result property="priority" column="priority" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,notification_id,title,
+        content,recipient_id,status,
+        created_at,updated_at,type,
+        is_deleted,priority
+    </sql>
+</mapper>

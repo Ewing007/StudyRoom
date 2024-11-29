@@ -27,23 +27,6 @@ public interface AdminService extends IService<UserTable> {
 
     ResultPage<Void> someMethodToUpdateStudyRoom( RoomUpdateReqDto roomDTO);
 
-    ResultPage<Void> someMethodToDeleteStudyRoom(String roomId);
-
-    ResultPage<List<UserTable>> getAllUsers();
-
-    ResultPage<List<String>> getAllPermissions();
-
-    ResultPage<Void> addPermission(String permission);
-
-    ResultPage<Void> deletePermission(String permission);
-
-    ResultPage<Void> assignPermission(UserTable userTable);
-
-    ResultPage<Object> someMethodToQueryStudyRoom(String roomId);
-
-    ResultPage<Object> someMethodToEditStudyRoom(String roomId, String seatId, String userId, Object object);
-
-    ResultPage<Object> someMethodToEditSeat(String roomId, String seatId, Object object);
 
     ResultPage<PageRespDto<UserInfoByAdminDto>> managerAllUsers(UserInfoAllByAdminReqDto userInfoAllByAdminReqDto);
 

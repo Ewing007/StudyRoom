@@ -32,4 +32,6 @@ public class ApiRouterConstant {
     public static final String MESSAGE_URL_PREFIX = API_FRONT_URL_PREFIX + "/message";
     public static final String LOSS_FOUND_URL_PREFIX = API_FRONT_URL_PREFIX + "/found";
     public static final String ANNOUNCEMENT_FOUND_URL_PREFIX = API_FRONT_URL_PREFIX + "/announcement";
+
+    public static final String QR_CODE_URL_PREFIX = API_FRONT_URL_PREFIX + "/qrcode";
 }

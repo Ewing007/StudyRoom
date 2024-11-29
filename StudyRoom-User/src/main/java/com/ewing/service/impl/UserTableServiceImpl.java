@@ -5,8 +5,8 @@ import Utils.JwtUtils;
 import cn.hutool.core.date.DateTime;
 
 
-import cn.hutool.json.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.ewing.WebSocket.WebSocketService;
 import com.ewing.domain.dto.req.*;
 import com.ewing.domain.dto.resp.UserUpdateRespDto;
 import com.ewing.domain.entity.*;
@@ -31,6 +31,7 @@ import context.UserContext;
 import context.UserInfoContextHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import Exception.BusinessException;
@@ -65,6 +66,9 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
 
     private final RoomClient roomClient;
 
+    private final WebSocketService webSocketService;
+
+    private final KafkaTemplate<String, HashMap<String, String>> kafkaTemplate;
     @Override
     public ResultPage<UserLoginRespDto> login(UserLoginReqDto userLoginReqDto) throws BusinessException {
         //校验验证码是否正确
@@ -520,8 +524,15 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
         Object code = jsonObject.get("code");
         log.info("自习室预定结果：{}", jsonObject);
         log.info("预定结果code：{}", code);
+        HashMap<String, String> map = new HashMap<>();
+        String date = bookRoomReqDto.getDate().toString();
+        String time = bookRoomReqDto.getTime().stream().collect(Collectors.joining(" "));
+        map.put(userContext.getUserId(), SystemConfigConstant.USER_BOOK_SUCCESS + date + " " + time);
         return switch (code.toString()) {
-            case "A4014" -> ResultPage.SUCCESS(ErrorEnum.RESERVATION_CREATE_SUCCESS);
+            case "A4014" -> {
+                kafkaTemplate.send(SystemConfigConstant.SYSTEM_MESSAGE_TOPIC, map);
+                yield ResultPage.SUCCESS(ErrorEnum.RESERVATION_CREATE_SUCCESS);
+            }
             case "A4025" -> ResultPage.FAIL(ErrorEnum.SEAT_NOT_FOUND);
             case "A4026" -> ResultPage.FAIL(ErrorEnum.TIME_SLOT_NOT_FOUND);
             case "A4027" -> ResultPage.FAIL(ErrorEnum.RESERVATION_TIME_CONFLICT);
@@ -543,11 +554,15 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
             //无权限直接返回 USER_NOT_PERSSIONS
             return ResultPage.FAIL(ErrorEnum.USER_NOT_PERSSIONS);
         }
-        String s = roomClient.cancelStudyRoom(reservationId);
         JSONObject jsonObject = JSONObject.parseObject(roomClient.cancelStudyRoom(reservationId));
         Object code = jsonObject.get("code");
+        HashMap<String, String> map = new HashMap<>();
+        map.put(userContext.getUserId(), SystemConfigConstant.USER_BOOK_CANCEL);
         return switch (code.toString()) {
-            case "A4032" -> ResultPage.SUCCESS(ErrorEnum.RESERVATION_CANCEL_SUCCESS);
+            case "A4032" -> {
+                kafkaTemplate.send(SystemConfigConstant.SYSTEM_MESSAGE_TOPIC, map);
+                yield ResultPage.SUCCESS(ErrorEnum.RESERVATION_CANCEL_SUCCESS);
+            }
             case "A4029" -> ResultPage.FAIL(ErrorEnum.RESERVATION_NOT_FOUND);
             case "A4030" -> ResultPage.FAIL(ErrorEnum.RESERVATION_ALREADY_CANCELLED);
             case "A4031" -> ResultPage.FAIL(ErrorEnum.RESERVATION_CANCEL_FAILURE);
@@ -555,8 +570,6 @@ public class UserTableServiceImpl extends ServiceImpl<UserTableMapper, UserTable
             case "A4050" -> ResultPage.FAIL(ErrorEnum.RESERVATION_CANCEL_TOO_LATE);
             default -> ResultPage.FAIL(ErrorEnum.UKNOWN_ERROR);
         };
-
-
     }
 
     @Override

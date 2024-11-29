@@ -58,6 +58,17 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/,file:${StudyRoom.file.upload.path}/
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: studyRoom-group
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    producer:
+      key-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 xxl:
   job:
     admin:

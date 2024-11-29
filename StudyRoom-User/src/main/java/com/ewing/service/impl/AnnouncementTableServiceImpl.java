@@ -4,6 +4,7 @@ import Page.PageRespDto;
 import Result.ResultPage;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateTime;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
@@ -14,9 +15,11 @@ import com.ewing.domain.dto.req.AnnouncementReqDto;
 import com.ewing.domain.dto.req.AnnouncementUpdateReqDto;
 import com.ewing.domain.entity.AnnouncementTable;
 import com.ewing.domain.entity.LogTable;
+import com.ewing.manager.RedisCache;
 import com.ewing.mapper.AnnouncementTableMapper;
 
 import com.ewing.service.AnnouncementTableService;
+import constant.CacheConstant;
 import constant.ErrorEnum;
 import constant.SystemConfigConstant;
 import context.UserInfoContextHandler;
@@ -26,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author ewing
@@ -38,11 +42,21 @@ import java.util.List;
 public class AnnouncementTableServiceImpl extends ServiceImpl<AnnouncementTableMapper, AnnouncementTable>
     implements AnnouncementTableService {
 
+    private final RedisCache redisCache;
     private final AnnouncementTableMapper announcementTableMapper;
     @Override
     public ResultPage<List<AnnouncementDto>> getAllAnnouncement() {
+        List<AnnouncementDto> cacheObject = redisCache.getCacheObject(CacheConstant.ANNOUNCEMENT_CACHE_KEY);
+        if (ObjectUtil.isNotEmpty(cacheObject)) {
+            return ResultPage.SUCCESS(cacheObject);
+        }
+        return ResultPage.SUCCESS(getAnnouncementDtos());
+    }
+
+    private List<AnnouncementDto> getAnnouncementDtos() {
         List<AnnouncementDto> announcementDtoList = announcementTableMapper.selectAllAnnouncements();
-        return ResultPage.SUCCESS(announcementDtoList);
+        redisCache.setCacheObject(CacheConstant.ANNOUNCEMENT_CACHE_KEY,announcementDtoList);
+        return announcementDtoList;
     }
 
     @Override
@@ -73,7 +87,14 @@ public class AnnouncementTableServiceImpl extends ServiceImpl<AnnouncementTableM
         announcementTable.setStartTime(announcementCreateReqDto.getStartTime());
         announcementTable.setEndTime(announcementCreateReqDto.getEndTime());
         boolean save = this.save(announcementTable);
-        return save ? ResultPage.SUCCESS(ErrorEnum.ANNOUNCEMENT_POST_SUCCESS) : ResultPage.FAIL(ErrorEnum.ANNOUNCEMENT_POST_FAILURE);
+        if(save) {
+            // 刷新公告列表到redis缓存
+            getAnnouncementDtos();
+            return ResultPage.SUCCESS(ErrorEnum.ANNOUNCEMENT_POST_SUCCESS);
+        }else {
+            return ResultPage.FAIL(ErrorEnum.ANNOUNCEMENT_POST_FAILURE);
+        }
+//        return save ? ResultPage.SUCCESS(ErrorEnum.ANNOUNCEMENT_POST_SUCCESS) : ResultPage.FAIL(ErrorEnum.ANNOUNCEMENT_POST_FAILURE);
     }
 
 

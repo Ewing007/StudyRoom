@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ewing.Enum.TimeSlot;
+import com.ewing.config.RedissonConfig;
 import com.ewing.context.UserContext;
 import com.ewing.context.UserContextHolder;
 import com.ewing.domain.dto.ReservationByAdminDto;
@@ -35,6 +36,8 @@ import constant.ErrorEnum;
 import com.ewing.mapper.TimeSlotTableMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -70,14 +73,14 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
 
     private final SeatTimeTableMapper seatTimeTableMapper;
     private final ReservationTableMapper reservationTableMapper;
+    private final RedissonClient redissonClient;
 
-
-
+    private final RedissonConfig redissonConfig;
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultPage<Void> bookRoom(BookRoomReqDto bookRoomReqDto) {
         UserContext userContext = UserContextHolder.getUserContext();
-        if (ObjectUtil.isNull(userContext)) {
+        if (userContext == null) {
             return ResultPage.FAIL(ErrorEnum.USER_NOT_PERSSIONS);
         }
 
@@ -86,10 +89,8 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
         // 检查座位是否存在
         // 检查座位是否存在且可用
         List<String> timeSlots = bookRoomReqDto.getTime().stream()
-                .map(seatId -> {
-                    return TimeSlot.getSlotNameByTimeRange(seatId);
-                }).collect(Collectors.toList());
-
+                .map(TimeSlot::getSlotNameByTimeRange)
+                .collect(Collectors.toList());
 
         log.info("预约时间段：{}", timeSlots);
 
@@ -109,18 +110,16 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
                 .eq("seat_id", bookRoomReqDto.getSeatId())
                 .eq("date", bookRoomReqDto.getDate())
                 .in("slot_id", timeSlots));
+
         log.info("冲突的预约记录：{}", conflictingReservations);
         if (!conflictingReservations.isEmpty()) {
             return ResultPage.FAIL(ErrorEnum.RESERVATION_TIME_CONFLICT);
         }
 
-
         // 校验预约时间不能在过去
         LocalDate currentDate = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
-        // 将 java.util.Date 转换为 java.time.LocalDate
-        LocalDate bookingDate = bookRoomReqDto.getDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-
+        LocalDate bookingDate = bookRoomReqDto.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         if (bookingDate.isBefore(currentDate)) {
             return ResultPage.FAIL(ErrorEnum.RESERVATION_PAST_DATE);
@@ -137,6 +136,7 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("GMT+8"));
         String dateStr = sdf.format(bookRoomReqDto.getDate());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
         List<ReservationTable> reservationTables = new ArrayList<>();
         timeSlots.forEach(timeSlot -> {
             ReservationTable reservationTable = new ReservationTable();
@@ -149,7 +149,7 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
 
             try {
                 Date startTime = dateFormat.parse(dateStr + " " + TimeSlot.getTimeRangeBySlotId(timeSlot).getStartTime());
-                Date endTime = dateFormat.parse( dateStr + " " + TimeSlot.getTimeRangeBySlotId(timeSlot).getEndTime());
+                Date endTime = dateFormat.parse(dateStr + " " + TimeSlot.getTimeRangeBySlotId(timeSlot).getEndTime());
 
                 reservationTable.setStartTime(startTime);
                 reservationTable.setEndTime(endTime);
@@ -160,48 +160,173 @@ public class ReservationTableServiceImpl extends ServiceImpl<ReservationTableMap
         });
 
         log.info("预约记录：{}", reservationTables);
-        // 批量插入预约信息
-        reservationTableMapper.insert(reservationTables);
 
+        // 获取分布式锁
+        String lockKey = "bookRoom:" + bookRoomReqDto.getRoomId() + ":" + bookRoomReqDto.getSeatId() + ":" + bookRoomReqDto.getDate();
+        RLock lock = redissonClient.getLock(lockKey);
 
-        // 将 Date 转换为 Instant
-        Instant instant = bookRoomReqDto.getDate().toInstant();
+        log.info("获取锁：{}", lockKey);
+        try {
+            if (lock.tryLock(10, 1, java.util.concurrent.TimeUnit.SECONDS)) {
+                try {
+                    // 批量插入预约信息
+                    reservationTableMapper.insert(reservationTables);
 
-        // 将 Instant 转换为 ZonedDateTime，指定时区为 GMT+8
-        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
-        ZonedDateTime zonedDateTime = instant.atZone(zoneId);
+                    // 更新座位状态
+                    timeSlots.forEach(timeSlot -> {
+                        SeatTimeTable seatTimeTable = new SeatTimeTable();
+                        seatTimeTable.setStatus("1");
+                        seatTimeTable.setSeatId(bookRoomReqDto.getSeatId());
+                        int update1 = seatTimeTableMapper.update(seatTimeTable, new UpdateWrapper<SeatTimeTable>()
+                                .eq("seat_id", bookRoomReqDto.getSeatId())
+                                .eq("date", bookRoomReqDto.getDate())
+                                .eq("slot_id", timeSlot));
+                        log.info("更新座位时间表状态：{}", update1);
+                    });
 
-        // 从 ZonedDateTime 中提取 LocalDate
-        LocalDate localDate = zonedDateTime.toLocalDate();
-        log.info("预约日期：{}", localDate);
-        // 更新座位状态
-        timeSlots.forEach(timeSlot -> {
-            SeatTimeTable seatTimeTable = new SeatTimeTable();
-            seatTimeTable.setStatus("1");
-            log.info("更新座位时间表：{}", seatTimeTable);
-            log.info("座位ID：{}", bookRoomReqDto.getSeatId());
-            log.info("日期：{}", localDate);
-            log.info("时间段：{}", timeSlot);
-            List<SeatTimeTable> seat_id = seatTimeTableMapper.selectList(new QueryWrapper<SeatTimeTable>()
-                    .eq("seat_id", bookRoomReqDto.getSeatId()));
-            log.info("座位信息：{}", seat_id);
-            seatTimeTable.setSeatId(bookRoomReqDto.getSeatId());
-            int update1 = seatTimeTableMapper.update(seatTimeTable, new UpdateWrapper<SeatTimeTable>()
-                    .eq("seat_id", bookRoomReqDto.getSeatId())
-                    .eq("date", bookRoomReqDto.getDate())
-                    .eq("slot_id", timeSlot));
-            log.info("更新座位时间表状态：{}", update1);
-            // 创建要更新的 SeatTable 对象
-//            SeatTable seatTable = new SeatTable();
-//            seatTable.setStatus("1");
-//            int update = seatTableMapper.update(seatTable, new UpdateWrapper<SeatTable>()
-//                    .eq("seat_id", bookRoomReqDto.getSeatId()));
-//            log.info("更新座位状态：{}", update);
-        });
-
-        return ResultPage.SUCCESS(ErrorEnum.RESERVATION_CREATE_SUCCESS);
-
+                    return ResultPage.SUCCESS(ErrorEnum.RESERVATION_CREATE_SUCCESS);
+                } finally {
+                    log.info("释放锁：{}", lockKey);
+                    lock.unlock();
+                }
+            } else {
+                return ResultPage.FAIL(ErrorEnum.LOCK_ACQUIRE_FAILED);
+            }
+        } catch (InterruptedException e) {
+            log.error("获取锁失败", e);
+            return ResultPage.FAIL(ErrorEnum.LOCK_ACQUIRE_FAILED);
+        }
     }
+
+//    @Override
+//    @Transactional(rollbackFor = Exception.class)
+//    public ResultPage<Void> bookRoom(BookRoomReqDto bookRoomReqDto) {
+//        UserContext userContext = UserContextHolder.getUserContext();
+//        if (ObjectUtil.isNull(userContext)) {
+//            return ResultPage.FAIL(ErrorEnum.USER_NOT_PERSSIONS);
+//        }
+//
+//        String userId = userContext.getUserId();
+//
+//        // 检查座位是否存在
+//        // 检查座位是否存在且可用
+//        List<String> timeSlots = bookRoomReqDto.getTime().stream()
+//                .map(seatId -> {
+//                    return TimeSlot.getSlotNameByTimeRange(seatId);
+//                }).collect(Collectors.toList());
+//
+//
+//        log.info("预约时间段：{}", timeSlots);
+//
+//        // 检查用户在同一时间段内是否有其他预约
+//        List<ReservationTable> userConflictingReservations = reservationTableMapper.selectList(new QueryWrapper<ReservationTable>()
+//                .eq("user_id", userId)
+//                .eq("date", bookRoomReqDto.getDate())
+//                .in("slot_id", timeSlots));
+//
+//        if (!userConflictingReservations.isEmpty()) {
+//            return ResultPage.FAIL(ErrorEnum.USER_ALREADY_BOOKED);
+//        }
+//
+//        // 检查时间段是否与其他预约冲突
+//        List<ReservationTable> conflictingReservations = reservationTableMapper.selectList(new QueryWrapper<ReservationTable>()
+//                .eq("room_id", bookRoomReqDto.getRoomId())
+//                .eq("seat_id", bookRoomReqDto.getSeatId())
+//                .eq("date", bookRoomReqDto.getDate())
+//                .in("slot_id", timeSlots));
+//        log.info("冲突的预约记录：{}", conflictingReservations);
+//        if (!conflictingReservations.isEmpty()) {
+//            return ResultPage.FAIL(ErrorEnum.RESERVATION_TIME_CONFLICT);
+//        }
+//
+//
+//        // 校验预约时间不能在过去
+//        LocalDate currentDate = LocalDate.now();
+//        LocalTime currentTime = LocalTime.now();
+//        // 将 java.util.Date 转换为 java.time.LocalDate
+//        LocalDate bookingDate = bookRoomReqDto.getDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+//
+//
+//        if (bookingDate.isBefore(currentDate)) {
+//            return ResultPage.FAIL(ErrorEnum.RESERVATION_PAST_DATE);
+//        } else if (bookingDate.equals(currentDate)) {
+//            for (String timeSlot : timeSlots) {
+//                LocalTime startTime = LocalTime.parse(TimeSlot.getTimeRangeBySlotId(timeSlot).getStartTime());
+//                if (startTime.isBefore(currentTime)) {
+//                    return ResultPage.FAIL(ErrorEnum.RESERVATION_PAST_TIME);
+//                }
+//            }
+//        }
+//
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//        sdf.setTimeZone(java.util.TimeZone.getTimeZone("GMT+8"));
+//        String dateStr = sdf.format(bookRoomReqDto.getDate());
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        List<ReservationTable> reservationTables = new ArrayList<>();
+//        timeSlots.forEach(timeSlot -> {
+//            ReservationTable reservationTable = new ReservationTable();
+//            reservationTable.setReservationId(SnowUtils.getSnowflakeNextIdStr());
+//            reservationTable.setRoomId(bookRoomReqDto.getRoomId());
+//            reservationTable.setSeatId(bookRoomReqDto.getSeatId());
+//            reservationTable.setUserId(userId);
+//            reservationTable.setDate(bookRoomReqDto.getDate());
+//            reservationTable.setSlotId(timeSlot);
+//
+//            try {
+//                Date startTime = dateFormat.parse(dateStr + " " + TimeSlot.getTimeRangeBySlotId(timeSlot).getStartTime());
+//                Date endTime = dateFormat.parse( dateStr + " " + TimeSlot.getTimeRangeBySlotId(timeSlot).getEndTime());
+//
+//                reservationTable.setStartTime(startTime);
+//                reservationTable.setEndTime(endTime);
+//            } catch (ParseException e) {
+//                log.error("解析时间失败", e);
+//            }
+//            reservationTables.add(reservationTable);
+//        });
+//
+//        log.info("预约记录：{}", reservationTables);
+//        // 批量插入预约信息
+//        reservationTableMapper.insert(reservationTables);
+//
+//
+//        // 将 Date 转换为 Instant
+//        Instant instant = bookRoomReqDto.getDate().toInstant();
+//
+//        // 将 Instant 转换为 ZonedDateTime，指定时区为 GMT+8
+//        ZoneId zoneId = ZoneId.of("Asia/Shanghai");
+//        ZonedDateTime zonedDateTime = instant.atZone(zoneId);
+//
+//        // 从 ZonedDateTime 中提取 LocalDate
+//        LocalDate localDate = zonedDateTime.toLocalDate();
+//        log.info("预约日期：{}", localDate);
+//        // 更新座位状态
+//        timeSlots.forEach(timeSlot -> {
+//            SeatTimeTable seatTimeTable = new SeatTimeTable();
+//            seatTimeTable.setStatus("1");
+//            log.info("更新座位时间表：{}", seatTimeTable);
+//            log.info("座位ID：{}", bookRoomReqDto.getSeatId());
+//            log.info("日期：{}", localDate);
+//            log.info("时间段：{}", timeSlot);
+//            List<SeatTimeTable> seat_id = seatTimeTableMapper.selectList(new QueryWrapper<SeatTimeTable>()
+//                    .eq("seat_id", bookRoomReqDto.getSeatId()));
+//            log.info("座位信息：{}", seat_id);
+//            seatTimeTable.setSeatId(bookRoomReqDto.getSeatId());
+//            int update1 = seatTimeTableMapper.update(seatTimeTable, new UpdateWrapper<SeatTimeTable>()
+//                    .eq("seat_id", bookRoomReqDto.getSeatId())
+//                    .eq("date", bookRoomReqDto.getDate())
+//                    .eq("slot_id", timeSlot));
+//            log.info("更新座位时间表状态：{}", update1);
+//            // 创建要更新的 SeatTable 对象
+////            SeatTable seatTable = new SeatTable();
+////            seatTable.setStatus("1");
+////            int update = seatTableMapper.update(seatTable, new UpdateWrapper<SeatTable>()
+////                    .eq("seat_id", bookRoomReqDto.getSeatId()));
+////            log.info("更新座位状态：{}", update);
+//        });
+//
+//        return ResultPage.SUCCESS(ErrorEnum.RESERVATION_CREATE_SUCCESS);
+//
+//    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

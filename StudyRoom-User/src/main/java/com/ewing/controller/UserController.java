@@ -34,13 +34,6 @@ public class UserController {
 
     private final UserTableService userTableService;
 
-//    @Operation(summary = "接口测试")
-//    @GetMapping("/test")
-//    @MyLog(title = "用户模块", content = "测试用户模块")
-//    public ResultPage<String> test() {
-//        return ResultPage.SUCCESS("test admin");
-//    }
-
     @Operation(summary = "注册接口")
     @MyLog(title = "用户模块", content = "注册新用户")
     @PostMapping("/register")
@@ -69,52 +62,6 @@ public class UserController {
     public ResultPage<UserUpdateRespDto> update(@Validated @RequestBody UserUpdateReqDto userUpdateReqDto) throws BusinessException {
         return userTableService.update(userUpdateReqDto);
     }
-//
-//    @Operation(summary = "禁用用户")
-//    @PostMapping("/disable")
-//    @MyLog(title = "用户模块", content = "禁用用户")
-//    @RequiresPermission("MANAGE_USERS")
-//    public ResultPage<Void> disable(@RequestBody @Validated UserDisableReqDto userDisableReqDto) {
-//        return userTableService.disable(userDisableReqDto);
-//    }
-//    @Operation(summary = "解封用户")
-//    @PostMapping("/unblock")
-//    @MyLog(title = "用户模块", content = "解封用户")
-//    @RequiresPermission("MANAGE_USERS")
-//    public ResultPage<Void> unblock(@RequestBody @Validated UserDisableReqDto userDisableReqDto) {
-//        return userTableService.unblock(userDisableReqDto);
-//    }
-//
-//    @Operation(summary = "删除用户")
-//    @PostMapping("/delete")
-//    @MyLog(title = "用户模块", content = "删除用户")
-//    @RequiresPermission("MANAGE_USERS")
-//    public ResultPage<Void> delete(@RequestBody @Validated UserDeleteReqDto userDeleteReqDto) {
-//        return userTableService.delete(userDeleteReqDto);
-//    }
-//
-//
-//    @Operation(summary = "恢复删除用户")
-//    @PostMapping("/undelete")
-//    @MyLog(title = "用户模块", content = "恢复删除用户")
-//    @RequiresPermission("MANAGE_USERS")
-//    public ResultPage<Void> undelete(@RequestBody @Validated UserDeleteReqDto userDeleteReqDto) {
-//        return userTableService.undelete(userDeleteReqDto);
-//    }
-
-//    @Operation(summary = "管理员新建自习室")
-//    @PostMapping("/create_room")
-//    @MyLog(title = "用户模块", content = "管理员新建自习室")
-//    public ResultPage<Void> someMethodToCreateStudyRoom(@RequestBody RoomCreateReqDto roomDTO){
-//        return userTableService.someMethodToCreateStudyRoom(roomDTO);
-//    }
-//
-//    @Operation(summary = "管理员更新自习室")
-//    @PutMapping("/update_room/{roomId}")
-//    @MyLog(title = "用户模块", content = "管理员更新自习室")
-//    public ResultPage<Void> someMethodToUpdateStudyRoom(@PathVariable String  roomId, @RequestBody RoomUpdateReqDto roomDTO){
-//        return userTableService.someMethodToUpdateStudyRoom(roomId,roomDTO);
-//    }
 
     @Operation(summary = "用户预约自习室")
     @PostMapping("/book")
